@@ -4,6 +4,10 @@ Author: Douyin / TikTok: sxsxhh1 @没你好果汁吃
 
 Bilibili: UID 510717943 @装作有网名丶
 
+Demo videos:  
+Douyin: <https://v.douyin.com/Nna1Fs_QYVk/>  
+Bilibili: <https://b23.tv/7hVzfUw>
+
 This project uses an ESP32 to connect via BLE to any wearable device that supports heart-rate broadcast (smart bands, watches, etc.), read real-time heart rate data, and visualize it using LEDs, a buzzer, and a 0.96" OLED display (numeric HR + simulated ECG waveform).
 
 As long as the device implements the standard Heart Rate Service (UUID 0x180D) and enables HR broadcasting, it can work with this project.

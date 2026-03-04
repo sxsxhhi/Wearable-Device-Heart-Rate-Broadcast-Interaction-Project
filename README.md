@@ -3,6 +3,10 @@
 **作者 / Author：抖音 sxsxhh1 @没你好果汁吃  
 哔哩哔哩 UID：510717943 @装作有网名丶**
 
+**演示视频：**  
+抖音：<https://v.douyin.com/Nna1Fs_QYVk/>  
+B站：<https://b23.tv/7hVzfUw>
+
 本项目使用 ESP32 通过 BLE 连接支持“心率广播”的穿戴设备（智能手环 / 手表等），读取实时心率数据，用 LED、蜂鸣器和 0.96 寸 OLED 显示心率数字和模拟心电图（ECG）波形。  
 只要设备支持标准 **Heart Rate Service (0x180D)** 并开启心率广播，就可以使用本项目。
 
