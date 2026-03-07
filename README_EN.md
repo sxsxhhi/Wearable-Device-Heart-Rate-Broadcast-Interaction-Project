@@ -8,19 +8,18 @@ Demo videos:
 Douyin: <https://v.douyin.com/Nna1Fs_QYVk/>  
 Bilibili: <https://b23.tv/7hVzfUw>
 
-This project uses an ESP32 to connect via BLE to any wearable device that supports heart-rate broadcast (smart bands, watches, etc.), read real-time heart rate data, and visualize it using LEDs, a buzzer, and a 0.96" OLED display (numeric HR + simulated ECG waveform).
-
-As long as the device implements the standard Heart Rate Service (UUID 0x180D) and enables HR broadcasting, it can work with this project.
+This project uses an ESP32 to connect via BLE to any wearable that supports heart-rate broadcast (smart bands, watches, etc.), read real-time heart rate, and visualize it with LEDs, a buzzer, and a 0.96" OLED (numeric HR + simulated ECG).  
+As long as the device uses the standard **Heart Rate Service (UUID 0x180D)** and has HR broadcasting on, it works; **no code change is required by default**—Xiaomi, Huawei, OPPO, Vivo, and similar bands can connect as soon as heart-rate broadcast is enabled.
 
 Features
 
 • BLE connection to wearables
 
-• Scans nearby BLE devices and matches by name keyword or full name
+• **Default: match any device advertising Heart Rate Service (0x180D)**; no need to set device name or MAC
 
-• Uses standard Heart Rate Service UUID 0x180D and Heart Rate Measurement UUID0x2A37
+• Subscribes to standard Heart Rate Measurement (UUID 0x2A37)
 
-• In principle compatible with most HR-capable bands/watches (Huawei, Amazfit, Xiaomi, etc.)
+• Compatible with common HR-capable bands/watches (Xiaomi, Huawei, OPPO, Vivo, Amazfit, etc.)
 
 • Heart-rate display
 
@@ -78,27 +77,25 @@ Hardware
 
 • Other side → GND (internal pull-up)
 
-Configuration
+Configuration (optional)
 
-In `sxsxhh1.ino`:
+**Default settings require no change**—the first device advertising Heart Rate Service (0x180D) will be connected. If you have multiple HR devices nearby, you can optionally set in `sxsxhh1.ino`:
 
 ```cpp
-#define TARGET_DEVICE_NAME "YourDeviceName"
-#define TARGET_MAC_ADDRESS "xx:xx:xx:xx:xx:xx"
-#define USE_MAC_MATCH true  // set false to match only by name/UUID
+#define TARGET_DEVICE_NAME ""   // Empty = match any device with 0x180D; set to filter by name
+#define TARGET_MAC_ADDRESS "xx:xx:xx:xx:xx:xx"   // Used only when USE_MAC_MATCH is true
+#define USE_MAC_MATCH false   // Default off; match by service UUID (and optional name)
 ```
 
-Recommended:
-
-1. Start with `USE_MAC_MATCH = false` to connect by name + UUID only.
-2. After a stable connection is confirmed, read the real MAC address from the serial log,  
-   fill it into `TARGET_MAC_ADDRESS`, and set `USE_MAC_MATCH = true` for stricter matching.
+- **Leave `TARGET_DEVICE_NAME` empty**: connect to the first device with heart rate service.  
+- **Set a name** (e.g. `"Mi Band"`, `"HUAWEI Band"`): only connect if the device name contains that string.  
+- **Pin to one device**: copy its MAC from the serial log into `TARGET_MAC_ADDRESS` and set `USE_MAC_MATCH = true`.
 
 ### Usage
 
 1\. Install ESP32 core and required libraries in Arduino IDE.
 
-2\. Open sxsxhh1.ino and adjust the configuration macros to match your device name / MAC and wiring.
+2\. Open sxsxhh1.ino; no config change needed by default; optionally set device name or MAC as described above.
 
 3\. Upload to the ESP32 board.
 

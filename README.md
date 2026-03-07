@@ -10,14 +10,14 @@ B站：<https://b23.tv/7hVzfUw>
 ![实物效果图](CRm13_20260209_225450301.jpg)
 
 本项目使用 ESP32 通过 BLE 连接支持“心率广播”的穿戴设备（智能手环 / 手表等），读取实时心率数据，用 LED、蜂鸣器和 0.96 寸 OLED 显示心率数字和模拟心电图（ECG）波形。  
-只要设备支持标准 **Heart Rate Service (0x180D)** 并开启心率广播，就可以使用本项目。
+只要设备支持标准 **Heart Rate Service (0x180D)** 并开启心率广播，即可使用；**默认无需修改代码**，小米、华为、OPPO、Vivo 等品牌手环/手表在开启心率广播后即可直接连接。
 
 ### 功能简介
 
 - **BLE 连接穿戴设备**
-  - 扫描附近 BLE 设备，按名称关键字或完整名称匹配目标设备
-  - 使用标准 **心率服务 UUID：0x180D** 与 **心率特征 UUID：0x2A37** 进行订阅
-  - 理论上兼容大多数支持 Heart Rate Service 的手环 / 手表（如华为、华米、小米等）
+  - 默认按 **心率服务 UUID 0x180D** 匹配，扫描到任意广播该服务的设备即尝试连接，无需填写设备名称或 MAC
+  - 使用标准 **心率特征 UUID：0x2A37** 订阅实时心率
+  - 兼容常见支持心率广播的手环/手表（如小米、华为、OPPO、Vivo、华米等）
 
 - **心率显示**
   - 数字模式：OLED 显示大号心率数字
@@ -66,25 +66,25 @@ B站：<https://b23.tv/7hVzfUw>
   - `U8g2`（OLED 显示）
   - `Wire`（I2C）
 
-### 设备配置说明
+### 设备配置说明（可选）
 
-在代码 `sxsxhh1.ino` 中可以配置你自己的穿戴设备名称 / MAC：
+默认配置下**无需改代码**即可连接任意一台广播心率服务的手环/手表。若周围有多台设备，可在 `sxsxhh1.ino` 中按需设置：
 
 ```cpp
-#define TARGET_DEVICE_NAME "YourDeviceName"
-#define TARGET_MAC_ADDRESS "xx:xx:xx:xx:xx:xx"
-#define USE_MAC_MATCH true   // 若只按名称 / UUID 匹配，可改成 false
+#define TARGET_DEVICE_NAME ""   // 留空=匹配任意广播 0x180D 的设备；填写则仅连接名称包含此字符串的设备
+#define TARGET_MAC_ADDRESS "xx:xx:xx:xx:xx:xx"   // 仅当 USE_MAC_MATCH 为 true 时生效
+#define USE_MAC_MATCH false   // 默认关闭 MAC 严格匹配，按名称/服务 UUID 即可
 ```
 
-推荐步骤：
-1. 先将 `USE_MAC_MATCH` 设为 `false`，只按名称 + 心率服务 UUID 匹配；
-2. 确认能稳定连接后，在串口日志中记下真实 MAC，填入 `TARGET_MAC_ADDRESS`，再把 `USE_MAC_MATCH` 设为 `true` 提高精确度。
+- **不填 `TARGET_DEVICE_NAME`**：自动连接第一个扫描到的、带心率服务 (0x180D) 的设备  
+- **填写设备名称**：仅连接名称中包含该字符串的设备（如 `"HUAWEI Band"`、`"Mi Band"`）  
+- **需要固定某台设备时**：在串口日志中记下 MAC，填入 `TARGET_MAC_ADDRESS`，并将 `USE_MAC_MATCH` 改为 `true`
 
 ### 使用方法
 1. 安装 ESP32 开发板支持和 U8g2 等库。
-2. 打开 `sxsxhh1.ino`，根据你的设备名称 / MAC 适当修改配置宏。
+2. 打开 `sxsxhh1.ino`，默认无需修改配置；若有需要再按上面说明填写设备名称或 MAC。
 3. 烧录到 ESP32。
-4. 在你的手环 / 手表上开启心率广播 / 持续测量，并确保没有连接手机 App。
+4. 在手环/手表上开启心率广播（持续测量），并确保**未连接手机 App**。
 5. 上电 ESP32，串口监视器（115200）可看到扫描 / 连接 / 心率日志，OLED、LED、蜂鸣器按逻辑工作。
 
 ### 署名 / Attribution
