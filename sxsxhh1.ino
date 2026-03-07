@@ -1,6 +1,6 @@
 /*
  * ESP32 心率感应灯项目
- * 功能：连接华为手环 9，读取心率数据并通过 LED 闪烁反馈
+ * 功能：连接手环/手表心率广播（标准 0x180D），读取心率并通过 LED/蜂鸣器/OLED 反馈
  * 硬件：ESP32 DevKit V1
  * 板载 LED：GPIO 2
  * 蜂鸣器预留：GPIO 18
@@ -12,6 +12,7 @@
  *   Author:
  *     Douyin / TikTok: sxsxhh1 @没你好果汁吃
  *     Bilibili: UID 510717943 @装作有网名丶
+ *   GitHub: https://github.com/sxsxhhh/Wearable-Device-Heart-Rate-Broadcast-Interaction-Project
  */
 
  #include <BLEDevice.h>
@@ -33,9 +34,9 @@
  // 常见3V有源蜂鸣器模块多为低电平触发（LOW=响）。若你的模块是高电平触发，改为 BUZZER_ON HIGH、BUZZER_OFF LOW
  #define BUZZER_ON   HIGH        // 蜂鸣器“响”时的电平（低电平触发）
  #define BUZZER_OFF  LOW       // 蜂鸣器“不响”时的电平
- #define TARGET_DEVICE_NAME "HUAWEI Band HR-504"  // 目标设备名称
-#define TARGET_MAC_ADDRESS "c0:cd:12:de:55:04"
-#define USE_MAC_MATCH true
+ #define TARGET_DEVICE_NAME ""   // 留空=匹配任意广播心率服务(0x180D)的设备；填写则仅连接名称包含此字符串的设备
+#define TARGET_MAC_ADDRESS "xx:xx:xx:xx:xx:xx"   // 仅当 USE_MAC_MATCH 为 true 时生效
+#define USE_MAC_MATCH false   // 默认关闭：开源项目设备 MAC 不统一，先用名称/服务 UUID 匹配
 #define HEART_RATE_SERVICE_UUID "0000180d-0000-1000-8000-00805f9b34fb"
 #define HEART_RATE_CHAR_UUID "00002a37-0000-1000-8000-00805f9b34fb"
 #define DEBUG_SCAN true
@@ -691,34 +692,23 @@ void drawECGWaveform() {
        Serial.println();
      }
      
-     // 检查设备名称是否匹配目标设备（优先匹配，因为名称更稳定）
-     bool isTargetDevice = false;
-     if (advertisedDevice.haveName()) {
-       String deviceName = String(advertisedDevice.getName().c_str());
-       String targetName = String(TARGET_DEVICE_NAME);
-       
-       // 转换为小写进行比较（更宽松的匹配）
-       deviceName.toLowerCase();
-       targetName.toLowerCase();
-       
-       // 检查是否包含关键词 "huawei" 和 "band" 或 "hr"
-       if (deviceName.indexOf("huawei") >= 0 && 
-           (deviceName.indexOf("band") >= 0 || deviceName.indexOf("hr") >= 0)) {
-         isTargetDevice = true;
-         Serial.print(">>> 发现目标设备（名称匹配）: ");
-         Serial.println(advertisedDevice.getName().c_str());
-       }
-       
-       // 也检查完整匹配
-       if (deviceName.indexOf(targetName) >= 0) {
-         isTargetDevice = true;
-         Serial.print(">>> 发现目标设备（完整匹配）: ");
-         Serial.println(advertisedDevice.getName().c_str());
-       }
-     }
-     
-     // 检查设备是否包含心率服务 UUID（在广播数据中）
-     // 这是最可靠的匹配方式，因为服务UUID不会变化
+    // 设备名称匹配：仅当用户填写了 TARGET_DEVICE_NAME 时才按名称过滤
+    bool isTargetDevice = false;
+    String targetName = String(TARGET_DEVICE_NAME);
+    targetName.trim();
+    if (targetName.length() > 0 && advertisedDevice.haveName()) {
+      String deviceName = String(advertisedDevice.getName().c_str());
+      deviceName.toLowerCase();
+      targetName.toLowerCase();
+      if (deviceName.indexOf(targetName) >= 0) {
+        isTargetDevice = true;
+        Serial.print(">>> 发现目标设备（名称包含）: ");
+        Serial.println(advertisedDevice.getName().c_str());
+      }
+    }
+
+    // 检查设备是否广播标准心率服务 UUID 0x180D（小米/华为/OPPO/Vivo 等只要支持心率广播都会带）
+    // 留空 TARGET_DEVICE_NAME 时，仅靠此项即可匹配，无需改代码
      bool hasHeartRateService = false;
      if (advertisedDevice.haveServiceUUID() && 
          advertisedDevice.isAdvertisingService(BLEUUID(HEART_RATE_SERVICE_UUID))) {
@@ -846,10 +836,10 @@ void drawECGWaveform() {
    Serial.println("\n========================================");
    Serial.println("开始扫描心率设备...");
    Serial.print("目标设备名称: ");
-   Serial.println(TARGET_DEVICE_NAME);
-   Serial.print("目标MAC地址: ");
-   Serial.println(TARGET_MAC_ADDRESS);
-   Serial.println("请确保华为手环 9 已开启 BLE 心率广播");
+   Serial.println(String(TARGET_DEVICE_NAME).length() > 0 ? TARGET_DEVICE_NAME : "(留空=匹配任意广播心率服务的设备)");
+   Serial.print("MAC 严格匹配: ");
+   Serial.println(USE_MAC_MATCH ? "是" : "否");
+   Serial.println("请确保手环/手表已开启心率广播（持续测量），且未连接手机 App");
    Serial.println("========================================\n");
    Serial.flush();
    
